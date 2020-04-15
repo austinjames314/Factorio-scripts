@@ -1,2 +1,2 @@
 # Stormworks-scripts
-My Lua Scripts for Stormworks Microcontrollers
+My Lua Scripts for Factorio, specifically the Lua Combinator mod by OwnlyMe
