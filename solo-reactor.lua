@@ -40,27 +40,31 @@ function on_tick()
         Steam = 0
     end
 
-
     --'Constants'
-    ReactorNumber = "1" -- Used to send different signals depending on status.
-
-    PumpMatrix = {60, 70} -- Thermal power draw at each stage of pump activation.
+    PumpPowers = {70, 80} -- Thermal power draw at each stage of pump activation.
     PumpSignals = {"signal-A", "signal-B"} -- Signals to output to activate each level of pumps
 
     MaxPeakLoadTemp = 980 -- Temp to switch on all pumps, regardless of other considerations.
     CoolingTemp = 985 -- Temp to start ECS
     ScramTemp = 990 -- Temp to shutdown the core
     CoolantCutoff = 7000 -- Coolant level below which to scram the core regardless
+    TargetPowerOutput = 75 -- Target thermal output from the reactor, in MW
 
-    SteamShutdownLevel = 171600 -- 220seconds (gives buffer to keep filling with steam while shutting down)
-    SteamStartupLevel = 31200 -- 40 seconds 
-
+    SteamShutdownLevel = 229500 -- 255 seconds (900 * 255 sec. Gives a buffer for shutdown, and startup, plus room for surplus steam during shutdown)
+    SteamStartupLevel = 54000 -- 60 seconds (900 steam for 60 sec = 54000)
 
     ECSPumpSignal = "signal-E"
     LightSignal = "signal-L"
 
     --Wipe the outputs to reset them all
     output = {}
+
+    --Set delay. High precision when risk is high otherwise use less UPS
+    if coreTemp >= 985 then
+        delay = 1
+    else
+        delay = 12
+    end
 
     -- auto startup & shutdown code
     if Running > 0 then
@@ -75,19 +79,24 @@ function on_tick()
         end
     end
 
-    --Once we exceed the the base thermal output level, activate the first set of pumps
-    if powerOutput >= (PumpMatrix[1] + PumpMatrix[#PumpMatrix]) / 2 then
+    --Once we reach target power output, then turn on the first set of pumps
+    if powerOutput >= TargetPowerOutput then
         output[PumpSignals[1]] = 1
     end
-    
+
+    --If we go over the target power output, kick on the extra pump to cool it down a little
+    if powerOutput >= (TargetPowerOutput + 1) then
+        output[PumpSignals[2]] = 1
+    end
+
     --Turn on all heat exchanger pumps when the Maximum nominal temperature is reached, or we're at the max power draw level
-    if coreTemp > MaxPeakLoadTemp or powerOutput >= PumpMatrix[#PumpMatrix] then
+    if coreTemp > MaxPeakLoadTemp or powerOutput >= PumpPowers[#PumpPowers] then
         for i = 1, #PumpSignals do
             output[PumpSignals[i]] = 1
         end
     end
 
-    --Activate cooling when appropriate
+    --Activate emergency cooling when appropriate
     if coreTemp > CoolingTemp then
         output[ECSPumpSignal] = 1
     end
@@ -113,6 +122,4 @@ function on_tick()
     elseif Running == 1 then
         output["signal-green"] = 1
     end
-
-    output["signal-"..ReactorNumber] = Running
 end
