@@ -47,7 +47,7 @@ on_tick = function (event)
     MaxPeakLoadTemp = 980 -- Temp to switch on all pumps, regardless of other considerations.
     CoolingTemp = 985 -- Temp to start ECS
     ScramTemp = 990 -- Temp to shutdown the core
-    CoolantCutoff = 14000 --sa Coolant level below which to scram the core regardless
+    CoolantCutoff = 14000 --Coolant level below which to scram the core regardless
     TargetPowerOutput = 125 -- Target thermal output from the reactor, in MW
 
     SteamShutdownLevel = 400000 -- 255 seconds rounded up to 400k (1380 * 255 sec. Gives a buffer for shutdown, and startup, plus room for surplus steam during shutdown) 
@@ -55,10 +55,6 @@ on_tick = function (event)
 
     ECSPumpSignal = "signal-exmark"
     LightSignal = "signal-L"
-
-
-    ReactorNumber = "1" -- Used to send different signals depending on status. TO be set individually for each core.
-
 
     --Wipe the outputs to reset them all
     output = {}
